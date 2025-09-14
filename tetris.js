@@ -134,6 +134,7 @@ class Tetris {
         if (this.canMove(this.currentPiece, dx, dy)) {
             this.currentPiece.x += dx;
             this.currentPiece.y += dy;
+            if (dx !== 0) soundManager.play('tetrisMove');
             return true;
         }
         return false;
@@ -169,6 +170,7 @@ class Tetris {
         }
 
         this.currentPiece.rotation = (this.currentPiece.rotation + 1) % 4;
+        soundManager.play('tetrisRotate');
         return true;
     }
 
@@ -295,6 +297,7 @@ class Tetris {
             }
         }
 
+        soundManager.play('tetrisPlace');
         this.currentPiece = null;
     }
 
@@ -311,6 +314,7 @@ class Tetris {
             }
 
             if (fullLine) {
+                particleSystem.emitTetrisLineClearEffect(y);
                 this.grid.splice(y, 1);
                 this.grid.unshift(new Array(this.cols).fill(0));
                 this.supportedBySnake.splice(y, 1);
@@ -318,6 +322,10 @@ class Tetris {
                 y++;
                 linesCleared++;
             }
+        }
+
+        if (linesCleared > 0) {
+            soundManager.playTetrisLineClearSequence(linesCleared);
         }
 
         return linesCleared;

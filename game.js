@@ -60,6 +60,8 @@ class GameManager {
                 glowPhase: 0
             };
         } while (this.isPositionOccupied(this.powerUp.x, this.powerUp.y));
+
+        soundManager.play('powerUpAppear');
     }
 
     isPositionOccupied(x, y) {
@@ -86,10 +88,17 @@ class GameManager {
         this.checkCollisions();
         this.generatePowerUp();
 
+        particleSystem.update();
+
         if (this.invincible) {
             this.invincibleTimer--;
+            const head = this.snake.body[0];
+            if (frameCount % 3 === 0) {
+                particleSystem.emitInvincibleTrail(head.x, head.y);
+            }
             if (this.invincibleTimer <= 0) {
                 this.invincible = false;
+                soundManager.stopInvincibilityLoop();
             }
         }
 
@@ -148,9 +157,14 @@ class GameManager {
 
         if (this.tetris.grid[head.y] && this.tetris.grid[head.y][head.x]) {
             if (!this.invincible) {
+                particleSystem.shakeScreen(5, 15);
                 this.gameOver();
                 return;
             } else {
+                const piece = this.tetris.grid[head.y][head.x];
+                particleSystem.emitPieceDestroyEffect(head.x, head.y, piece.color);
+                soundManager.play('pieceDestroy');
+                particleSystem.shakeScreen(3, 10);
                 this.tetris.grid[head.y][head.x] = 0;
                 this.score += 50;
             }
@@ -159,6 +173,8 @@ class GameManager {
         if (head.x === this.apple.x && head.y === this.apple.y) {
             this.snake.grow();
             this.score += 10;
+            particleSystem.emitAppleCollectEffect(this.apple.x, this.apple.y);
+            soundManager.play('eatApple');
             this.generateApple();
         }
 
@@ -170,6 +186,9 @@ class GameManager {
     }
 
     activatePowerUp() {
+        particleSystem.emitPowerUpEffect(this.powerUp.x, this.powerUp.y);
+        soundManager.playInvincibilityStart();
+
         this.powerUp = null;
         this.invincible = true;
         this.invincibleTimer = 300;
@@ -178,7 +197,16 @@ class GameManager {
 
     gameOver() {
         this.gameState = 'GAME_OVER';
+        soundManager.stopInvincibilityLoop();
+        soundManager.playGameOverSequence();
+
+        const wasHighScore = this.score > this.highScore;
         this.saveHighScore();
+
+        if (wasHighScore && this.score > 0) {
+            setTimeout(() => soundManager.play('newHighScore'), 1000);
+        }
+
         document.getElementById('final-score').textContent = `PUNTUACIÓN FINAL: ${this.score}`;
         document.getElementById('game-over-screen').classList.remove('hidden');
     }
@@ -189,6 +217,8 @@ class GameManager {
         this.invincible = false;
         this.invincibleTimer = 0;
         this.powerUp = null;
+        particleSystem.clear();
+        soundManager.stopInvincibilityLoop();
         this.init();
         document.getElementById('game-over-screen').classList.add('hidden');
     }
@@ -196,8 +226,10 @@ class GameManager {
     pause() {
         if (this.gameState === 'PLAYING') {
             this.gameState = 'PAUSED';
+            soundManager.play('pause');
         } else if (this.gameState === 'PAUSED') {
             this.gameState = 'PLAYING';
+            soundManager.play('pause', 0.8);
         }
     }
 
@@ -224,6 +256,8 @@ class GameManager {
         if (this.gameState === 'PAUSED') {
             this.renderPauseScreen();
         }
+
+        particleSystem.render();
     }
 
     renderGrid() {
