@@ -107,22 +107,27 @@ class GameManager {
             this.snake.setDirection(1, 0);
         }
 
-        if (this.keys['KeyA']) {
+        if (this.keys['a'] || this.keys['A']) {
             this.tetris.movePiece(-1, 0);
-            this.keys['KeyA'] = false;
+            this.keys['a'] = false;
+            this.keys['A'] = false;
         }
-        if (this.keys['KeyD']) {
+        if (this.keys['d'] || this.keys['D']) {
             this.tetris.movePiece(1, 0);
-            this.keys['KeyD'] = false;
+            this.keys['d'] = false;
+            this.keys['D'] = false;
         }
-        if (this.keys['KeyS']) {
+        if (this.keys['s'] || this.keys['S']) {
             this.tetris.movePiece(0, 1);
         }
-        if (this.keys['KeyW'] || this.keys['KeyG'] || this.keys['KeyH']) {
+        if (this.keys['w'] || this.keys['W'] || this.keys['g'] || this.keys['G'] || this.keys['h'] || this.keys['H']) {
             this.tetris.rotatePiece();
-            this.keys['KeyW'] = false;
-            this.keys['KeyG'] = false;
-            this.keys['KeyH'] = false;
+            this.keys['w'] = false;
+            this.keys['W'] = false;
+            this.keys['g'] = false;
+            this.keys['G'] = false;
+            this.keys['h'] = false;
+            this.keys['H'] = false;
         }
     }
 
