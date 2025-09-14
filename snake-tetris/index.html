@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snake-Tetris Mashup</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+</head>
+<body>
+    <div id="game-container">
+        <div id="game-header">
+            <h1>SNAKE-TETRIS</h1>
+            <div id="score-panel">
+                <div id="current-score">SCORE: 0</div>
+                <div id="high-score">HIGH: 0</div>
+            </div>
+        </div>
+        <div id="game-canvas"></div>
+        <div id="controls-info">
+            <div class="control-group">
+                <span class="control-title">SNAKE:</span>
+                <span class="control-keys">↑ ↓ ← →</span>
+            </div>
+            <div class="control-group">
+                <span class="control-title">TETRIS:</span>
+                <span class="control-keys">W/G/H: Rotar | A/D: Mover | S: Bajar</span>
+            </div>
+            <div class="control-group">
+                <span class="control-title">OTROS:</span>
+                <span class="control-keys">SPACE: Pausa | R: Reiniciar</span>
+            </div>
+        </div>
+        <div id="game-over-screen" class="hidden">
+            <h2>GAME OVER</h2>
+            <p id="final-score">PUNTUACIÓN FINAL: 0</p>
+            <p class="restart-hint">Presiona R para reiniciar</p>
+        </div>
+    </div>
+
+    <script src="snake.js"></script>
+    <script src="tetris.js"></script>
+    <script src="game.js"></script>
+</body>
+</html>
