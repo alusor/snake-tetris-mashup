@@ -1,0 +1,30 @@
+{
+  "name": "snake-tetris-mashup",
+  "version": "1.0.0",
+  "description": "🐍🧩 Snake-Tetris Mashup: Un juego híbrido que combina Snake clásico con mecánicas de Tetris. Piezas caen mientras controlas la serpiente. ¡Arcade retro con efectos de neón y power-ups!",
+  "main": "index.html",
+  "scripts": {
+    "dev": "python3 -m http.server 8080",
+    "preview": "open index.html"
+  },
+  "keywords": [
+    "game",
+    "snake",
+    "tetris",
+    "javascript",
+    "p5js",
+    "arcade",
+    "retro",
+    "mashup"
+  ],
+  "author": "Claude Code",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/alusor/snake-tetris-mashup.git"
+  },
+  "homepage": "https://github.com/alusor/snake-tetris-mashup#readme",
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}
