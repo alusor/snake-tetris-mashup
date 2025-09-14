@@ -298,6 +298,12 @@ class Tetris {
         }
 
         soundManager.play('tetrisPlace');
+
+        // Update statistics
+        if (typeof game !== 'undefined' && game.gameStats) {
+            game.gameStats.tetrisPieces++;
+        }
+
         this.currentPiece = null;
     }
 
@@ -326,6 +332,13 @@ class Tetris {
 
         if (linesCleared > 0) {
             soundManager.playTetrisLineClearSequence(linesCleared);
+
+            // Update statistics and add score with combo
+            if (typeof game !== 'undefined') {
+                game.gameStats.linesCleared += linesCleared;
+                const lineScore = linesCleared === 4 ? 800 : linesCleared * 100; // Tetris bonus
+                game.addScore(lineScore, 'tetris');
+            }
         }
 
         return linesCleared;

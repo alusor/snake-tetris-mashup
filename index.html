@@ -15,9 +15,36 @@
             <div id="score-panel">
                 <div id="current-score">SCORE: 0</div>
                 <div id="high-score">HIGH: 0</div>
+                <div id="combo-display" class="hidden">
+                    <span id="combo-text">COMBO</span>
+                    <span id="combo-multiplier">x1</span>
+                </div>
             </div>
         </div>
-        <div id="game-canvas"></div>
+
+        <div id="main-game-area">
+            <div id="game-canvas"></div>
+
+            <div id="scoreboard-panel">
+                <div id="scoreboard-tabs">
+                    <button id="tab-scores" class="tab-btn active">🏆 RANKING</button>
+                    <button id="tab-stats" class="tab-btn">📊 STATS</button>
+                </div>
+
+                <div id="scoreboard-content">
+                    <div id="scores-tab" class="tab-content active">
+                        <h3>TOP 10</h3>
+                        <div id="scoreboard-list"></div>
+                    </div>
+
+                    <div id="stats-tab" class="tab-content hidden">
+                        <h3>ESTADÍSTICAS</h3>
+                        <div id="stats-content"></div>
+                        <button id="clear-data-btn" class="clear-btn">Limpiar Datos</button>
+                    </div>
+                </div>
+            </div>
+        </div>
         <div id="controls-info">
             <div class="control-group">
                 <span class="control-title">SNAKE:</span>
@@ -35,12 +62,34 @@
         <div id="game-over-screen" class="hidden">
             <h2>GAME OVER</h2>
             <p id="final-score">PUNTUACIÓN FINAL: 0</p>
+            <div id="rank-display" class="hidden">
+                <p id="rank-text">¡Nuevo récord! Posición #1</p>
+            </div>
             <p class="restart-hint">Presiona R para reiniciar</p>
+        </div>
+
+        <div id="name-input-modal" class="modal hidden">
+            <div class="modal-content">
+                <h2>¡NUEVO HIGH SCORE!</h2>
+                <p id="new-score-text">Puntuación: 0</p>
+                <p id="rank-position">Posición en el ranking: #1</p>
+
+                <div class="input-group">
+                    <label for="player-name">Ingresa tu nombre:</label>
+                    <input type="text" id="player-name" maxlength="20" placeholder="Tu nombre">
+                </div>
+
+                <div class="modal-buttons">
+                    <button id="save-score-btn">Guardar</button>
+                    <button id="skip-name-btn">Omitir</button>
+                </div>
+            </div>
         </div>
     </div>
 
     <script src="sound.js"></script>
     <script src="effects.js"></script>
+    <script src="scoreboard.js"></script>
     <script src="snake.js"></script>
     <script src="tetris.js"></script>
     <script src="game.js"></script>

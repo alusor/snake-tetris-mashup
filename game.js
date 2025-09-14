@@ -22,6 +22,29 @@ class GameManager {
 
         this.keys = {};
 
+        // Combo system
+        this.combo = 0;
+        this.comboMultiplier = 1;
+        this.lastAction = null;
+        this.comboTimer = 0;
+        this.maxCombo = 0;
+
+        // Game statistics
+        this.gameStats = {
+            startTime: Date.now(),
+            duration: 0,
+            applesEaten: 0,
+            tetrisPieces: 0,
+            linesCleared: 0,
+            powerUpsCollected: 0,
+            maxCombo: 0,
+            difficulty: 'Normal'
+        };
+
+        // Difficulty progression
+        this.level = 1;
+        this.pointsForNextLevel = 500;
+
         this.init();
     }
 
@@ -29,6 +52,147 @@ class GameManager {
         this.snake = new Snake(this.COLS, this.ROWS);
         this.tetris = new Tetris(this.COLS, this.ROWS, this.GRID_SIZE);
         this.generateApple();
+        this.setupScoreboardEvents();
+        this.updateUI();
+        this.updateScoreboard();
+    }
+
+    setupScoreboardEvents() {
+        // Tab switching
+        document.getElementById('tab-scores').addEventListener('click', () => {
+            this.switchTab('scores');
+        });
+
+        document.getElementById('tab-stats').addEventListener('click', () => {
+            this.switchTab('stats');
+        });
+
+        // Clear data button
+        document.getElementById('clear-data-btn').addEventListener('click', () => {
+            if (confirm('¿Estás seguro de que quieres limpiar todos los datos?')) {
+                scoreManager.clearAllData();
+                this.updateScoreboard();
+            }
+        });
+
+        // Name input modal events
+        document.getElementById('save-score-btn').addEventListener('click', () => {
+            this.savePlayerScore();
+        });
+
+        document.getElementById('skip-name-btn').addEventListener('click', () => {
+            this.savePlayerScore('');
+        });
+
+        // Enter key in name input
+        document.getElementById('player-name').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                this.savePlayerScore();
+            }
+        });
+    }
+
+    switchTab(tabName) {
+        // Remove active class from all tabs and content
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(content => {
+            content.classList.remove('active');
+            content.classList.add('hidden');
+        });
+
+        // Activate selected tab
+        document.getElementById(`tab-${tabName}`).classList.add('active');
+        document.getElementById(`${tabName}-tab`).classList.remove('hidden');
+        document.getElementById(`${tabName}-tab`).classList.add('active');
+
+        if (tabName === 'stats') {
+            scoreManager.renderStats();
+        }
+    }
+
+    updateScoreboard() {
+        scoreManager.renderScoreboard();
+        scoreManager.renderStats();
+    }
+
+    // Combo system methods
+    addCombo(actionType) {
+        if (this.lastAction === actionType || this.lastAction === null) {
+            this.combo++;
+            this.comboTimer = 300; // 5 seconds at 60fps
+        } else {
+            this.combo = 1;
+        }
+
+        this.lastAction = actionType;
+        this.comboMultiplier = Math.min(1 + (this.combo - 1) * 0.5, 5); // Max x5 multiplier
+
+        if (this.combo > this.maxCombo) {
+            this.maxCombo = this.combo;
+            this.gameStats.maxCombo = this.maxCombo;
+        }
+
+        this.updateComboDisplay();
+
+        if (this.combo >= 3) {
+            soundManager.play('invincibilityLoop', 0.5);
+        }
+    }
+
+    updateComboDisplay() {
+        const comboDisplay = document.getElementById('combo-display');
+        const comboMultiplier = document.getElementById('combo-multiplier');
+
+        if (this.combo >= 2) {
+            comboDisplay.classList.remove('hidden');
+            comboMultiplier.textContent = `x${this.comboMultiplier.toFixed(1)}`;
+            comboMultiplier.style.color = this.combo >= 5 ? '#FFD700' : this.combo >= 3 ? '#FF6B35' : '#00FFFF';
+        } else {
+            comboDisplay.classList.add('hidden');
+        }
+    }
+
+    resetCombo() {
+        this.combo = 0;
+        this.comboMultiplier = 1;
+        this.lastAction = null;
+        this.comboTimer = 0;
+        this.updateComboDisplay();
+    }
+
+    updateDifficulty() {
+        while (this.score >= this.pointsForNextLevel) {
+            this.level++;
+            this.pointsForNextLevel += 500;
+
+            // Increase speed slightly
+            this.snake.moveSpeed = Math.max(4, this.snake.moveSpeed - 0.5);
+            this.tetrisInterval = Math.max(400, this.tetrisInterval - 50);
+
+            // Flash effect for level up
+            particleSystem.startFlash([0, 255, 255], 80);
+            soundManager.play('powerUpAppear');
+
+            this.gameStats.difficulty = this.getDifficultyName();
+        }
+    }
+
+    getDifficultyName() {
+        if (this.level >= 10) return 'Insane';
+        if (this.level >= 7) return 'Hard';
+        if (this.level >= 4) return 'Normal+';
+        return 'Normal';
+    }
+
+    addScore(points, actionType = null) {
+        const baseScore = Math.floor(points * this.comboMultiplier);
+        this.score += baseScore;
+
+        if (actionType) {
+            this.addCombo(actionType);
+        }
+
+        this.updateDifficulty();
         this.updateUI();
     }
 
@@ -89,6 +253,14 @@ class GameManager {
         this.generatePowerUp();
 
         particleSystem.update();
+
+        // Update combo timer
+        if (this.comboTimer > 0) {
+            this.comboTimer--;
+            if (this.comboTimer === 0) {
+                this.resetCombo();
+            }
+        }
 
         if (this.invincible) {
             this.invincibleTimer--;
@@ -166,13 +338,14 @@ class GameManager {
                 soundManager.play('pieceDestroy');
                 particleSystem.shakeScreen(3, 10);
                 this.tetris.grid[head.y][head.x] = 0;
-                this.score += 50;
+                this.addScore(50, 'destroy');
             }
         }
 
         if (head.x === this.apple.x && head.y === this.apple.y) {
             this.snake.grow();
-            this.score += 10;
+            this.gameStats.applesEaten++;
+            this.addScore(10, 'apple');
             particleSystem.emitAppleCollectEffect(this.apple.x, this.apple.y);
             soundManager.play('eatApple');
             this.generateApple();
@@ -189,26 +362,70 @@ class GameManager {
         particleSystem.emitPowerUpEffect(this.powerUp.x, this.powerUp.y);
         soundManager.playInvincibilityStart();
 
+        this.gameStats.powerUpsCollected++;
         this.powerUp = null;
         this.invincible = true;
         this.invincibleTimer = 300;
-        this.score += 100;
+        this.addScore(100, 'powerup');
     }
 
     gameOver() {
         this.gameState = 'GAME_OVER';
         soundManager.stopInvincibilityLoop();
         soundManager.playGameOverSequence();
+        this.resetCombo();
 
-        const wasHighScore = this.score > this.highScore;
+        // Update game duration
+        this.gameStats.duration = Date.now() - this.gameStats.startTime;
+        this.gameStats.score = this.score;
+
+        // Check if it's a high score
+        const isHighScore = scoreManager.isHighScore(this.score);
+        const wasPersonalBest = this.score > this.highScore;
         this.saveHighScore();
 
-        if (wasHighScore && this.score > 0) {
+        if (wasPersonalBest && this.score > 0) {
             setTimeout(() => soundManager.play('newHighScore'), 1000);
         }
 
-        document.getElementById('final-score').textContent = `PUNTUACIÓN FINAL: ${this.score}`;
+        document.getElementById('final-score').textContent = `PUNTUACIÓN FINAL: ${this.score.toLocaleString()}`;
+
+        if (isHighScore && this.score > 0) {
+            this.showNameInputModal();
+        } else {
+            document.getElementById('game-over-screen').classList.remove('hidden');
+        }
+    }
+
+    showNameInputModal() {
+        const rank = scoreManager.getPlayerRank(this.score);
+
+        document.getElementById('new-score-text').textContent = `Puntuación: ${this.score.toLocaleString()}`;
+        document.getElementById('rank-position').textContent = `Posición en el ranking: #${rank}`;
+        document.getElementById('player-name').value = '';
+        document.getElementById('name-input-modal').classList.remove('hidden');
+
+        // Focus on input
+        setTimeout(() => {
+            document.getElementById('player-name').focus();
+        }, 100);
+    }
+
+    savePlayerScore(customName = null) {
+        const playerName = customName !== null ? customName : document.getElementById('player-name').value.trim();
+
+        const rank = scoreManager.addScore(playerName, this.score, this.gameStats);
+
+        // Hide modal and show game over screen
+        document.getElementById('name-input-modal').classList.add('hidden');
+
+        if (rank <= 10) {
+            document.getElementById('rank-text').textContent = `¡Posición #${rank} en el ranking!`;
+            document.getElementById('rank-display').classList.remove('hidden');
+        }
+
         document.getElementById('game-over-screen').classList.remove('hidden');
+        this.updateScoreboard();
     }
 
     restart() {
@@ -217,10 +434,30 @@ class GameManager {
         this.invincible = false;
         this.invincibleTimer = 0;
         this.powerUp = null;
+
+        // Reset combo and difficulty
+        this.resetCombo();
+        this.level = 1;
+        this.pointsForNextLevel = 500;
+        this.tetrisInterval = 1000;
+
+        // Reset game stats
+        this.gameStats = {
+            startTime: Date.now(),
+            duration: 0,
+            applesEaten: 0,
+            tetrisPieces: 0,
+            linesCleared: 0,
+            powerUpsCollected: 0,
+            maxCombo: 0,
+            difficulty: 'Normal'
+        };
+
         particleSystem.clear();
         soundManager.stopInvincibilityLoop();
         this.init();
         document.getElementById('game-over-screen').classList.add('hidden');
+        document.getElementById('rank-display').classList.add('hidden');
     }
 
     pause() {
