@@ -405,10 +405,12 @@ class GameManager {
         document.getElementById('player-name').value = '';
         document.getElementById('name-input-modal').classList.remove('hidden');
 
-        // Focus on input
+        // Focus on input after modal is fully shown
         setTimeout(() => {
-            document.getElementById('player-name').focus();
-        }, 100);
+            const input = document.getElementById('player-name');
+            input.focus();
+            input.select(); // Select any existing text
+        }, 200);
     }
 
     savePlayerScore(customName = null) {
@@ -587,6 +589,12 @@ function draw() {
 }
 
 function keyPressed() {
+    // Don't process game keys if name input modal is open
+    const nameModal = document.getElementById('name-input-modal');
+    if (nameModal && !nameModal.classList.contains('hidden')) {
+        return true; // Allow default browser behavior for typing
+    }
+
     game.keys[key] = true;
     game.keys[keyCode] = true;
 
@@ -606,6 +614,12 @@ function keyPressed() {
 }
 
 function keyReleased() {
+    // Don't process game keys if name input modal is open
+    const nameModal = document.getElementById('name-input-modal');
+    if (nameModal && !nameModal.classList.contains('hidden')) {
+        return true; // Allow default browser behavior for typing
+    }
+
     game.keys[key] = false;
     game.keys[keyCode] = false;
 }
